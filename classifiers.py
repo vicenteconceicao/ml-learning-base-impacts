@@ -1,57 +1,36 @@
-#from joblib import Memory
-from sklearn import preprocessing
-from sklearn.datasets import load_svmlight_file
-from sklearn.model_selection import train_test_split
+import time
 
 # Classifiers
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import Perceptron
 
-def knn(k, metric, X_train, y_train, X_test):
-    writeResult("Classifier: KNN")
-    writeResult("K: "+str(k)+" metric:"+metric)
-
-    neigh = KNeighborsClassifier(n_neighbors=k, metric=metric)
+def classify(clf_name, X_train, y_train, X_test):
+    if(clf_name == "knn"):
+        clf = KNeighborsClassifier(n_neighbors=3, metric="manhattan")
+    if(clf_name == "naive_bayes"):
+        clf = GaussianNB()
+    if(clf_name == "lda"):
+        clf = LinearDiscriminantAnalysis()
+    if(clf_name == "logistic_regression"):
+        clf = LogisticRegression(random_state=0)
+    if(clf_name == "perceptron"):
+        clf = Perceptron(tol=1e-3, random_state=0)
     
-    print ('Fitting knn')
-    neigh.fit(X_train, y_train)
+    print('Fitting '+clf_name+'...')
+    start = time.time()
+    clf.fit(X_train, y_train)
+    end = time.time()
+    fit_time = (end - start)
 
-    print ('Preditting knn')
-    y_pred = neigh.predict(X_test)
+    print('Preditting '+clf_name+'...')
+    start = time.time()
+    y_pred = clf.predict(X_test)
+    end = time.time()
+    predict_time = (end - start)
 
-    print("knn done")
+    print(clf_name+" done")
 
-    return neigh, y_pred
-
-def naiveBayes(X_train, y_train, X_test):
-    writeResult("Classifier: NAIVE BAYES")
-    gnb = GaussianNB()
-    y_pred = gnb.fit(X_train, y_train).predict(X_test)
-    return gnb, y_pred
-
-def dataLoad(trainFile, testFile, size):
-    print("File size:"+str(size))
-
-    # Loads data
-    print("Loading data...")
-    X_train, y_train = load_svmlight_file(trainFile)
-    X_test, y_test = load_svmlight_file(testFile)
-
-    X_train = X_train.toarray()
-    X_test = X_test.toarray()
-
-    # Normalizacao dos dados #######
-    #print("Normalization data...")
-    #scaler = preprocessing.MaxAbsScaler()
-    #X_train = scaler.fit_transform(X_train[0:size])
-    #X_test = scaler.fit_transform(X_test)
-
-    print("Load data done")
-
-    return X_train[0:size], y_train[0:size], X_test, y_test 
-
-    
-def writeResult(text):
-    resultFile = open("results/result.txt", "a+")
-    resultFile.write(str(text)+"\n")
-    resultFile.close
+    return clf, y_pred, fit_time, predict_time
